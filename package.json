@@ -2,13 +2,13 @@
   "name": "catalog",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "tiny-emitter": "^2.1.0",
     "vue": "^3.2.45"
   },
   "devDependencies": {

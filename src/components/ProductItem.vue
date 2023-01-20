@@ -1,17 +1,18 @@
 <template>
   <li class="catalog__item">
-    <a class="catalog__pic" href="#">
-      <img
-        :src="product.image"
-        :alt="product.title"
-      />
+    <a
+      class="catalog__pic"
+      href="#"
+      @click.prevent="gotoPage('product', { id: product.id })"
+    >
+      <img :src="product.image" :alt="product.title" />
     </a>
 
     <h3 class="catalog__title">
       <a href="#"> {{ product.title }} </a>
     </h3>
 
-    <span class="catalog__price">{{ product.price }}</span>
+    <span class="catalog__price">{{ productPrice }}</span>
 
     <ul class="colors colors--black">
       <li class="colors__item" v-for="itemColor in product.colors">
@@ -22,24 +23,39 @@
             :value="itemColor"
             v-model="color"
           />
-          <span class="colors__value" :style="{backgroundColor: colors[itemColor]}"> </span>
+          <span
+            class="colors__value"
+            :style="{ backgroundColor: colors[itemColor] }"
+          >
+          </span>
         </label>
       </li>
     </ul>
   </li>
 </template>
 <script>
-import colors from '../data/colors'
+import colors from '@/data/colors'
+import gotoPage from '@/helpers/gotoPage'
+import numberFormat from '@/helpers/numberFormat'
+
 export default {
   setup() {
     return {
-      colors
+      colors,
     }
   },
   props: ['product'],
   data() {
     return {
-      color: ''
+      color: '',
+    }
+  },
+  methods: {
+    gotoPage,
+  },
+  computed: {
+    productPrice() {
+      return numberFormat(this.product.price)
     }
   }
 }

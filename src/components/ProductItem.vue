@@ -1,18 +1,17 @@
 <template>
   <li class="catalog__item">
-    <a
+    <router-link
       class="catalog__pic"
-      href="#"
-      @click.prevent="gotoPage('product', { id: product.id })"
+      :to="{ name: 'product', params: { id: product.id } }"
     >
       <img :src="product.image" :alt="product.title" />
-    </a>
+    </router-link>
 
     <h3 class="catalog__title">
       <a href="#"> {{ product.title }} </a>
     </h3>
 
-    <span class="catalog__price">{{ productPrice }}</span>
+    <span class="catalog__price">{{ $filters.numberFormat(product.price) }}</span>
 
     <ul class="colors colors--black">
       <li class="colors__item" v-for="itemColor in product.colors">
@@ -35,28 +34,18 @@
 </template>
 <script>
 import colors from '@/data/colors'
-import gotoPage from '@/helpers/gotoPage'
-import numberFormat from '@/helpers/numberFormat'
 
 export default {
+  props: ['product'],
   setup() {
     return {
       colors,
     }
   },
-  props: ['product'],
   data() {
     return {
       color: '',
     }
   },
-  methods: {
-    gotoPage,
-  },
-  computed: {
-    productPrice() {
-      return numberFormat(this.product.price)
-    }
-  }
 }
 </script>

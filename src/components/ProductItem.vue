@@ -13,39 +13,23 @@
 
     <span class="catalog__price">{{ $filters.numberFormat(product.price) }}</span>
 
-    <ul class="colors colors--black">
-      <li class="colors__item" v-for="itemColor in product.colors">
-        <label class="colors__label">
-          <input
-            class="colors__radio sr-only"
-            type="radio"
-            :value="itemColor"
-            v-model="color"
-          />
-          <span
-            class="colors__value"
-            :style="{ backgroundColor: colors[itemColor] }"
-          >
-          </span>
-        </label>
-      </li>
-    </ul>
+  <product-color-picker
+    :colors="product.colors"
+    :is-black="true"
+  ></product-color-picker>
   </li>
 </template>
 <script>
-import colors from '@/data/colors'
-
+import ProductColorPicker from './ProductColorPicker.vue'
 export default {
   props: ['product'],
-  setup() {
-    return {
-      colors,
-    }
-  },
   data() {
     return {
-      color: '',
+      color: 0,
     }
   },
+  components: {
+    ProductColorPicker
+  }
 }
 </script>

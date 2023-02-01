@@ -25,6 +25,7 @@
     <section class="cart">
       <form class="cart__form form" action="#" method="POST">
         <div class="cart__field">
+          <base-loader v-if="!products"></base-loader>
           <ul class="cart__list">
             <cart-item  v-for="item in products" :key="item.productId" :item="item"></cart-item>
           </ul>
@@ -50,7 +51,9 @@
 <script>
 import { useCartStore } from '@/store'
 import { mapState } from 'pinia'
-import CartItem from '../components/CartItem.vue'
+import CartItem from '@/components/CartItem.vue'
+import BaseLoader from '../components/BaseLoader.vue'
+
 export default {
   computed: {
     ...mapState(useCartStore, ['cartDetailProducts', 'cartTotalPrice']),
@@ -62,7 +65,8 @@ export default {
     }
   },
   components: {
-    CartItem
+    CartItem,
+    BaseLoader,
   }
 }
 </script>

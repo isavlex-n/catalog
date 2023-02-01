@@ -1,5 +1,6 @@
 <template>
-  <li class="cart__item product">
+  <base-loader v-if="cartLoading"></base-loader>
+  <li class="cart__item product" v-else>
     <div class="product__pic">
       <img
         :src="item.product.image"
@@ -15,9 +16,9 @@
       {{ item.productId }}
     </span>
     <product-counter
-        v-model:product-amount="amount"
-        @update:product-amount="amount = $event"
-      ></product-counter>
+      v-model:product-amount="amount"
+      @update:product-amount="amount = $event"
+    ></product-counter>
 
     <b class="product__price">
       {{ $filters.numberFormat(item.amount * item.product.price) }}
@@ -39,6 +40,7 @@
 <script>
 import { mapActions } from 'pinia'
 import { useCartStore } from '@/store'
+import BaseLoader from './BaseLoader.vue'
 import ProductCounter from '@/components/ProductCounter.vue'
 
 export default {
@@ -46,7 +48,12 @@ export default {
     const cartStore = useCartStore()
 
     return {
-      updateCartProduct: cartStore.updateCartProduct,
+      updateCartProductAmount: cartStore.updateCartProductAmount,
+    }
+  },
+  data() {
+    return {
+      cartLoading: false,
     }
   },
   props: ['item'],
@@ -56,7 +63,7 @@ export default {
         return this.item.amount
       },
       set(value) {
-        this.updateCartProduct({
+        this.updateCartProductAmount({
           productId: this.item.productId,
           amount: value,
         })
@@ -64,10 +71,17 @@ export default {
     },
   },
   methods: {
-    ...mapActions(useCartStore, { deleteProduct: 'deleteCartProduct' }),
+    ...mapActions(useCartStore, ['deleteCartProduct']),
+    deleteProduct(productId) {
+      this.cartLoading = true
+      this.deleteCartProduct(productId).then(() => {
+        this.cartLoading = false
+      })
+    },
   },
   components: {
     ProductCounter,
+    BaseLoader,
   },
 }
 </script>

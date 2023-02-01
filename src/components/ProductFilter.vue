@@ -2,11 +2,21 @@
   <aside class="filter">
     <h2 class="filter__title">Фильтры</h2>
 
-    <form class="filter__form form" action="#" method="get" @submit.prevent="submit">
+    <form
+      class="filter__form form"
+      action="#"
+      method="get"
+      @submit.prevent="submit"
+    >
       <fieldset class="form__block">
         <legend class="form__legend">Цена</legend>
         <label class="form__label form__label--price">
-          <input class="form__input" type="text" name="min-price" v-model.number="currentPriceFrom" />
+          <input
+            class="form__input"
+            type="text"
+            name="min-price"
+            v-model.number="currentPriceFrom"
+          />
           <span class="form__value">От</span>
         </label>
         <label class="form__label form__label--price">
@@ -23,30 +33,29 @@
       <fieldset class="form__block">
         <legend class="form__legend">Категория</legend>
         <label class="form__label form__label--select">
-          <select class="form__select" name="category" v-model.number="currentCategoryId">
+          <select
+            class="form__select"
+            name="category"
+            v-model.number="currentCategoryId"
+          >
             <option value="0">Все категории</option>
-            <option :value="category.id" v-for="category in categories" :key="category.id">{{ category.title }}</option>
-
+            <option
+              :value="category.id"
+              v-for="category in categories"
+              :key="category.id"
+            >
+              {{ category.title }}
+            </option>
           </select>
         </label>
       </fieldset>
 
       <fieldset class="form__block">
         <legend class="form__legend">Цвет</legend>
-        <ul class="colors">
-          <li class="colors__item" v-for="(colorValue, colorName) in colors">
-            <label class="colors__label">
-              <input
-                class="colors__radio sr-only"
-                type="radio"
-                v-model="currentColor"
-                :value="colorName"
-              />
-              <span class="colors__value" :style="{backgroundColor: colorValue}">
-              </span>
-            </label>
-          </li>
-        </ul>
+        <product-color-picker
+          :colors="colors"
+          @picked="currentColor = $event"
+        ></product-color-picker>
       </fieldset>
 
       <fieldset class="form__block">
@@ -142,28 +151,30 @@
       <button class="filter__submit button button--primery" type="submit">
         Применить
       </button>
-      <button class="filter__reset button button--second" type="button" @click="reset">
+      <button
+        class="filter__reset button button--second"
+        type="button"
+        @click="reset"
+      >
         Сбросить
       </button>
     </form>
   </aside>
 </template>
 <script>
-import categories from '../data/categories'
-import colors from '../data/colors'
+import axios from 'axios'
+import ProductColorPicker from './ProductColorPicker.vue'
+
 export default {
-  setup() {
-    return {
-      colors
-    }
-  },
   props: ['priceFrom', 'priceTo', 'categoryId', 'color'],
   data() {
     return {
-      currentColor: '',
+      colorsData: null,
+      currentColor: null,
       currentPriceFrom: 0,
       currentPriceTo: 0,
       currentCategoryId: 0,
+      categoriesData: null,
     }
   },
   watch: {
@@ -176,8 +187,21 @@ export default {
     categoryId(value) {
       this.currentCategoryId = value
     },
+    color(value) {
+      this.currentColor = value
+    },
   },
   methods: {
+    loadColors() {
+      axios
+        .get(`${import.meta.env.VITE_SERVER_URL}api/colors`)
+        .then((res) => (this.colorsData = res.data))
+    },
+    loadCategories() {
+      axios
+        .get(`${import.meta.env.VITE_SERVER_URL}api/productCategories`)
+        .then((res) => (this.categoriesData = res.data))
+    },
     submit() {
       this.$emit('update:price-from', this.currentPriceFrom)
       this.$emit('update:price-to', this.currentPriceTo)
@@ -189,12 +213,22 @@ export default {
       this.$emit('update:price-to', 0)
       this.$emit('update:category-id', 0)
       this.$emit('update:color', '')
-    }
+    },
   },
   computed: {
-    categories() {
-      return categories
+    colors() {
+      return this.colorsData ? this.colorsData.items : []
     },
+    categories() {
+      return this.categoriesData ? this.categoriesData.items : []
+    },
+  },
+  created() {
+    this.loadColors()
+    this.loadCategories()
+  },
+  components: {
+    ProductColorPicker,
   },
 }
 </script>

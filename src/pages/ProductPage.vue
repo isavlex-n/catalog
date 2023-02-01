@@ -1,5 +1,11 @@
 <template>
-  <main class="content container">
+  <main class="content container" v-if="productLoading">
+    <base-loader v-if="productLoading"></base-loader>
+  </main>
+  <main class="content container" v-else-if="!productData">
+    Не удалось загрузить товар
+  </main>
+  <main class="content container" v-else>
     <div class="content__top">
       <ul class="breadcrumbs">
         <li class="breadcrumbs__item">
@@ -24,7 +30,7 @@
           <img
             width="570"
             height="570"
-            :src="product.image"
+            :src="product.image.file.url"
             :alt="product.title"
           />
         </div>
@@ -40,57 +46,16 @@
             method="POST"
             @submit.prevent="addToCart"
           >
-            <b class="item__price"> {{ productPrice }} ₽ </b>
+            <b class="item__price">
+              {{ $filters.numberFormat(product.price) }} ₽
+            </b>
 
             <fieldset class="form__block">
               <legend class="form__legend">Цвет:</legend>
-              <ul class="colors">
-                <li class="colors__item">
-                  <label class="colors__label">
-                    <input
-                      class="colors__radio sr-only"
-                      type="radio"
-                      name="color-item"
-                      value="blue"
-                      checked=""
-                    />
-                    <span
-                      class="colors__value"
-                      style="background-color: #73b6ea"
-                    >
-                    </span>
-                  </label>
-                </li>
-                <li class="colors__item">
-                  <label class="colors__label">
-                    <input
-                      class="colors__radio sr-only"
-                      type="radio"
-                      name="color-item"
-                      value="yellow"
-                    />
-                    <span
-                      class="colors__value"
-                      style="background-color: #ffbe15"
-                    >
-                    </span>
-                  </label>
-                </li>
-                <li class="colors__item">
-                  <label class="colors__label">
-                    <input
-                      class="colors__radio sr-only"
-                      type="radio"
-                      name="color-item"
-                      value="gray" />
-                    <span
-                      class="colors__value"
-                      style="background-color: #939393"
-                    >
-                    </span
-                  ></label>
-                </li>
-              </ul>
+              <product-color-picker
+                :colors="product.colors"
+                @picked="productColor = $event"
+              ></product-color-picker>
             </fieldset>
 
             <fieldset class="form__block">
@@ -139,10 +104,16 @@
                 v-model:product-amount="productAmount"
                 @update:product-amount="productAmount = $event"
               ></product-counter>
-              <button class="button button--primery" type="submit">
+              <button
+                class="button button--primery"
+                type="submit"
+                :disabled="productAddSending"
+              >
                 В корзину
               </button>
             </div>
+            <div v-show="productAdded">Товар добавлен в корзину</div>
+            <div v-show="productAddSending">Добавляем товар в корзину</div>
           </form>
         </div>
       </div>
@@ -209,46 +180,74 @@
   </main>
 </template>
 <script>
+import axios from 'axios'
 import ProductCounter from '@/components/ProductCounter.vue'
-import products from '@/data/products'
-import categories from '@/data/categories'
-import numberFormat from '@/helpers/numberFormat'
+import ProductColorPicker from '../components/ProductColorPicker.vue'
+import BaseLoader from '@/components/BaseLoader.vue'
 import { useCartStore } from '@/store'
+import { mapActions } from 'pinia'
 export default {
-  setup() {
-    const cartStore = useCartStore()
-    return {
-      cartStore,
-    }
-  },
   data() {
     return {
       productAmount: 1,
+      productColor: 0,
+      productData: null,
+      productLoading: false,
+      productLoadingFailed: false,
+      productAdded: false,
+      productAddSending: false,
     }
   },
   computed: {
     product() {
-      return products.find((product) => product.id === +this.$route.params.id)
+      return this.productData
     },
     category() {
-      return categories.find(
-        (category) => category.id === this.product.categoryId,
-      )
-    },
-    productPrice() {
-      return numberFormat(this.product.price)
+      return this.productData.category
     },
   },
   methods: {
+    ...mapActions(useCartStore, ['addProductToCart']),
     addToCart() {
-      this.cartStore.addProductToCart({
+      this.productAdded = false
+      this.productAddSending = true
+      this.addProductToCart({
         productId: this.product.id,
         amount: this.productAmount,
+      }).then(() => {
+        this.productAdded = true
+        this.productAddSending = false
       })
+    },
+    loadProduct() {
+      this.productLoading = true
+      this.productLoadingFailed = false
+      axios
+        .get(
+          `${import.meta.env.VITE_SERVER_URL}api/products/${
+            this.$route.params.id
+          }`,
+        )
+        .then((res) => (this.productData = res.data))
+        .catch(() => (this.productLoadingFailed = true))
+        .then(() => (this.productLoading = false))
+    },
+  },
+  created() {
+    this.loadProduct()
+  },
+  watch: {
+    '$route.params.id': {
+      handler() {
+        this.loadProduct()
+      },
+      immediate: true,
     },
   },
   components: {
     ProductCounter,
+    ProductColorPicker,
+    BaseLoader,
   },
 }
 </script>

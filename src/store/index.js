@@ -1,43 +1,124 @@
 import { createPinia, defineStore } from 'pinia'
-import products from '@/data/products'
+import axios from 'axios'
 
 export const useCartStore = defineStore('cartStore', {
   state: () => ({
-    cartProducts: [
-      {
-        productId: 4,
-        amount: 1,
-      },
-    ],
+    cartProducts: [],
+    userAccessKey: null,
+    cartProductsData: [],
   }),
   actions: {
-    addProductToCart(product) {
-      const item = this.cartProducts.find(
-        (item) => item.productId === product.productId,
-      )
-      if (item) {
-        item.amount += product.amount
-      } else {
-        this.cartProducts.push(product)
-      }
+    addProductToCart({ productId, amount }) {
+      return axios
+        .post(
+          `${import.meta.env.VITE_SERVER_URL}api/baskets/products`,
+          {
+            productId,
+            quantity: amount,
+          },
+          {
+            params: {
+              userAccessKey: this.userAccessKey,
+            },
+          },
+        )
+        .then((res) => {
+          this.cartProductsData = res.data.items
+          this.syncCartProducts()
+        })
     },
-    updateCartProduct({productId, amount}) {
-      const item = this.cartProducts.find(item => item.productId === productId)
+    updateCartProduct({ productId, amount }) {
+      const item = this.cartProducts.find(
+        (item) => item.productId === productId,
+      )
 
-      if(item) {
+      if (item) {
         item.amount = amount
       }
     },
     deleteCartProduct(productId) {
-      this.cartProducts = this.cartProducts.filter(item => item.productId !== productId)
-    }
+      return axios
+        .delete(`${import.meta.env.VITE_SERVER_URL}api/baskets/products`, {
+          data: {
+            productId,
+          },
+          params: {
+            userAccessKey: this.userAccessKey,
+          },
+        })
+        .then((res) => {
+          this.cartProductsData = res.data.items
+          this.cartProducts = this.cartProducts.filter(
+            (p) => p.id === productId,
+          )
+        })
+        .then(() => {
+          this.syncCartProducts()
+        })
+    },
+    updateUserAccessKey(key) {
+      this.userAccessKey = key
+    },
+    syncCartProducts() {
+      this.cartProducts = this.cartProductsData.map((item) => ({
+        productId: item.product.id,
+        amount: item.quantity,
+      }))
+    },
+    loadCart() {
+      return axios
+        .get(`${import.meta.env.VITE_SERVER_URL}api/baskets`, {
+          params: {
+            userAccessKey: this.userAccessKey,
+          },
+        })
+        .then((res) => {
+          if (!this.userAccessKey) {
+            localStorage.setItem('userAccessKey', res.data.user.accessKey)
+            this.userAccessKey = res.data.user.accessKey
+          }
+          this.cartProductsData = res.data.items
+          this.syncCartProducts()
+        })
+    },
+    updateCartProductAmount({ productId, amount }) {
+      this.updateCartProduct({ productId, amount })
+      if (amount < 1) return
+      return axios
+        .put(
+          `${import.meta.env.VITE_SERVER_URL}api/baskets/products`,
+          {
+            productId,
+            quantity: amount,
+          },
+          {
+            params: {
+              userAccessKey: this.userAccessKey,
+            },
+          },
+        )
+        .then((res) => {
+          this.cartProductsData = res.data.items
+        })
+        .then(() => {
+          this.syncCartProducts()
+        })
+    },
   },
   getters: {
     cartDetailProducts(state) {
-      return state.cartProducts.map((item) => ({
-        ...item,
-        product: products.find((p) => p.id === item.productId),
-      }))
+      return state.cartProducts.map((item) => {
+        const product = this.cartProductsData.find(
+          (p) => p.product.id === item.productId,
+        ).product
+        return {
+          ...item,
+          product: {
+            ...product,
+            image: product.image.file.url,
+          },
+        }
+      })
     },
     cartTotalPrice() {
       return this.cartDetailProducts.reduce(

@@ -6,8 +6,27 @@ export const useCartStore = defineStore('cartStore', {
     cartProducts: [],
     userAccessKey: null,
     cartProductsData: [],
+    orderInfo: null,
   }),
   actions: {
+    loadOrderInfo(orderId) {
+      return axios
+        .get(`${import.meta.env.VITE_SERVER_URL}api/orders/${orderId}`, {
+          params: {
+            userAccessKey: this.userAccessKey,
+          },
+        })
+        .then((res) => {
+          this.orderInfo = res.data
+        })
+    },
+    updateOrderInfo(orderInfo) {
+      this.orderInfo = orderInfo
+    },
+    resetCart() {
+      this.cartProducts = []
+      this.cartProductsData = []
+    },
     addProductToCart({ productId, amount }) {
       return axios
         .post(
@@ -125,7 +144,7 @@ export const useCartStore = defineStore('cartStore', {
         (acc, item) => item.product.price * item.amount + acc,
         0,
       )
-    },
+    }
   },
 })
 

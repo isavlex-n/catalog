@@ -39,9 +39,9 @@
             Итого: <span>{{ $filters.numberFormat(totalPrice) }} ₽</span>
           </p>
 
-          <button class="cart__button button button--primery" type="submit">
-            Оформить заказ
-          </button>
+          <router-link :to="{name: 'order'}" v-slot="{ navigate }">
+            <button @click="navigate" :disabled="!products.length" class="cart__button button button--primery">Оформить заказ</button>
+          </router-link>
         </div>
       </form>
     </section>

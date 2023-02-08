@@ -9,27 +9,27 @@ import OrderInfoPage from '@/pages/OrderInfoPage.vue'
 const routes = [
   {
     name: 'main',
-    path: '/',
+    path: '/catalog-ghp/',
     component: MainPage,
   },
   {
     name: 'cart',
-    path: '/cart',
+    path: '/catalog-ghp/cart',
     component: CartPage,
   },
   {
     name: 'order',
-    path: '/order',
+    path: '/catalog-ghp/order',
     component: OrderPage,
   },
   {
     name: 'orderInfo',
-    path: '/order/:id',
+    path: '/catalog-ghp/order/:id',
     component: OrderInfoPage,
   },
   {
     name: 'product',
-    path: '/product/:id',
+    path: '/catalog-ghp/product/:id',
     component: ProductPage,
   },
   {
